@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+APP=$1
+DC=$2
+findcdb() {
+  FULLPATH="$CDBPATH/snmp/$HOST.$DC.ariba.com"
+    if [ -e ${FULLPATH} ] ; then
+      cd ${FULLPATH}
+      CDBFILES=`ls -r | egrep ora.*data\|ora.*log | sort -t: +1 -2`
+      for CDBFILE in $CDBFILES ; do
+         echo ${APP},${HOST}.${DC}.`echo "$CDBFILE" | awk -F[_:.] '{printf "%s.%s,%s\n",$6,$7,$1}'|sed 's/.cdb//'|sed 's/Disk/GB/'|sed 's/Percent/PCT/'`,snmp/${HOST}.${DC}.ariba.com/${CDBFILE} | sed 's/\.\././'
+      done
+    else
+      echo "$FULLPATH not found"
+    fi
+}
+if [ $# -ge 2 ] ; then
+HOSTS="`echo $* | sed s/$APP// | sed s/$DC//`"
+CDBPATH="/var/mon/circular-db"
+  for HOST in $HOSTS ; do
+    findcdb
+  done
+else
+    echo "Usage: $0 APP DC hostname"
+fi
